@@ -1,6 +1,4 @@
 # Author: Todor Dimov
-# Date: 11/22/19
-# Course: CISC 6930
 # Assignment: K-Means Algorithm
 
 from __future__ import division
@@ -43,7 +41,7 @@ def ClusterChang(previousDF, newDF):
     return isChanged
 
 
-# Loading arff file as dataframe
+# Loading arff file as data frame
 data = arff.loadarff("segment.arff")
 trainDF = pd.DataFrame(data[0])
 classDF = trainDF[['class']].copy()
@@ -51,15 +49,15 @@ trainDF.drop('class', axis=1, inplace=True)
 
 normalizedTrainDF = normalizeDF(trainDF)
 
-# Total Number of features
+# Total number of features (attributes) for each data point
 noOfFeatures = 19
-# List of K(Cluster)
+# List of K-values
 kList = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
 # Number of Initial Centroid Set
 clusteringRun = 25
-# Max number of K-mean iteration to find the best centroid
+# Max number of K-mean iterations if no optimal position has been found
 maxIteration = 50
-# Initial Centroid indices
+# Initial centroid indices
 centroidIndicesList = [775, 1020, 200, 127, 329, 1626, 1515, 651, 658, 328, 1160, 108, 422, 88, 105, 261, 212, 1941,
                        1724, 704, 1469, 635, 867, 1187, 445, 222, 1283, 1288, 1766, 1168, 566, 1812, 214,
                        53, 423, 50, 705, 1284, 1356, 996, 1084, 1956, 254, 711, 1997, 1378, 827, 1875, 424, 1790, 633,
@@ -106,18 +104,18 @@ for kValue in kList:
             distDF = pd.DataFrame(tmpDict)
 
             distDF['FinalDist'] = distDF.min(axis=1)
-            distDF['AssigedCluster'] = distDF.idxmin(axis=1)
+            distDF['AssignedCluster'] = distDF.idxmin(axis=1)
 
             dfWithAssignedCluster = pd.concat([normalizedTrainDF, distDF], axis=1)
 
             # check to see if any data point changes its cluster from the previous run, If not, Break the iteration.
             if not prevDFWithAssignedCluster.empty:
-                if ((dfWithAssignedCluster['AssigedCluster'] == prevDFWithAssignedCluster['AssigedCluster']).all()):
+                if ((dfWithAssignedCluster['AssignedCluster'] == prevDFWithAssignedCluster['AssignedCluster']).all()):
                     break
             prevDFWithAssignedCluster = dfWithAssignedCluster.copy()
             # End
 
-            newDFWithMeanCentroid = dfWithAssignedCluster.groupby(['AssigedCluster']).mean()
+            newDFWithMeanCentroid = dfWithAssignedCluster.groupby(['AssignedCluster']).mean()
 
             # Creating the new centroids for the next runs, based on the mean of the cluster.
             initialCentroid2DList = []
@@ -129,18 +127,19 @@ for kValue in kList:
         print(sseDF.sum())
         SSEList.append(round(sseDF.sum(), 2))
 
+    # Prints the SSE results of each iterations
     print("SSEList: ", SSEList)
 
-    stdSEE = np.std(SSEList)
+    stdSSE = np.std(SSEList)
     meanSSE = np.mean(SSEList)
     sseMeanForEachKValue.append(meanSSE)
-    stdForEachKValue.append(stdSEE)
-    std1ForEachKValue.append((meanSSE - 2 * stdSEE))
-    std2ForEachKValue.append((meanSSE + 2 * stdSEE))
+    stdForEachKValue.append(stdSSE)
+    std1ForEachKValue.append((meanSSE - 2 * stdSSE))
+    std2ForEachKValue.append((meanSSE + 2 * stdSSE))
     print("meanSSE ------ >", meanSSE)
-    print("stdSEE ------- >", stdSEE)
-    print("stdSEE (1) --- >", meanSSE - 2 * stdSEE)
-    print("stdSEE (2) --- >", meanSSE + 2 * stdSEE)
+    print("stdSSE ------- >", stdSSE)
+    print("stdSSE (1) --- >", meanSSE - 2 * stdSSE)
+    print("stdSSE (2) --- >", meanSSE + 2 * stdSSE)
 
 sseDict = {"K-Value": kList, "SSE(Mean)": sseMeanForEachKValue, "STD(SSE)": stdForEachKValue,
            "(MeanSSE - 2*std)": std1ForEachKValue,
@@ -148,6 +147,7 @@ sseDict = {"K-Value": kList, "SSE(Mean)": sseMeanForEachKValue, "STD(SSE)": stdF
 
 print(pd.DataFrame(OrderedDict(sseDict)))
 
+# Plotting of the results, where every k-value is compared to its SSEMean
 figure = plt.figure()
 
 plt.xlabel('K-Cluster')
@@ -157,4 +157,5 @@ plt.plot(kList, sseMeanForEachKValue)
 plt.errorbar(kList, sseMeanForEachKValue, yerr=2 * np.array(stdForEachKValue), fmt="o")
 plt.show()
 
-figure.savefig("Plot_Question1.pdf")
+# Saves the plotted graph a separate pdf
+figure.savefig("Plot_K-Means.pdf")
